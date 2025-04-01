@@ -6,6 +6,7 @@ public class PlayerMover : MonoBehaviour, IPlayerMovementHandler
     [Header("Variables")]
     [SerializeField] private float _speed = 5;
     [SerializeField] private float _jumpForce = 5;
+    [SerializeField] private float _rotationSpeed = 10f;
 
     private Rigidbody _rb;
     private Transform _cameraTransform;
@@ -60,6 +61,9 @@ public class PlayerMover : MonoBehaviour, IPlayerMovementHandler
             right.Normalize();
 
             horizontalMove = (forward * _moveInput.y + right * _moveInput.x) * _speed;
+
+            Quaternion targetRotation = Quaternion.LookRotation(horizontalMove);
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.fixedDeltaTime * _rotationSpeed);
         }
 
         Vector3 newVelocity = horizontalMove;
