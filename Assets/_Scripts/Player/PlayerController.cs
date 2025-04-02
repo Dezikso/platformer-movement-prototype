@@ -1,16 +1,18 @@
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.WSA;
 
 public class PlayerController : MonoBehaviour
 {
+    public IPlayerMovementHandler MovementHandler => _movementHandler;
+    public IPlayerSwingingHandler SwingingHandler => _swingingHandler;
+
     [Header("References")]
     [SerializeField] private InputReader _input;
 
     private IPlayerMovementHandler _movementHandler;
     private IPlayerSwingingHandler _swingingHandler;
 
-    private PlayerState _currentState = PlayerState.Walking;
+    private AbstractPlayerState _currentState;
 
     private void Awake()
     {
@@ -19,6 +21,8 @@ public class PlayerController : MonoBehaviour
 
         _swingingHandler = GetComponent<IPlayerSwingingHandler>();
         Assert.IsNotNull(_swingingHandler);
+
+        _currentState = new WalkingState(this);
     }
 
     private void OnEnable()
@@ -34,51 +38,30 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("SwingPole"))
-        {
-            if (_currentState != PlayerState.Swinging)
-            {
-                StartSwinging(other.transform);
-            }
-        }
+        if (other.CompareTag("SwingPole") && _currentState is not SwingingState)
+            ChangeState(new SwingingState(this, other.transform));
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        // If the player has launched and is waiting for a collision, reenable movement and reset rotation.
-        if (_currentState == PlayerState.Launched)
+        // If the player has launched he's waiting for a collision to resume movement
+        if (_currentState is LaunchedState)
         {
-            _movementHandler.Enable();
-            _currentState = PlayerState.Walking;
+            ChangeState(new WalkingState(this));
             ResetRotation();
         }
     }
 
-    private void HandleMove(Vector2 direction)
+    public void ChangeState(AbstractPlayerState newState)
     {
-        if (_currentState == PlayerState.Walking)
-            _movementHandler.Move(direction);
+        _currentState.Exit();
+        _currentState = newState;
+        _currentState.Enter();
     }
 
-    private void HandleJump()
-    {
-        if (_currentState == PlayerState.Walking)
-        {
-            _movementHandler.Jump();
-        }
-        else if (_currentState == PlayerState.Swinging)
-        {
-            _currentState = PlayerState.Launched;
-            _swingingHandler.Launch();
-        }
-    }
+    private void HandleMove(Vector2 direction) => _currentState.HandleMove(direction);
 
-    private void StartSwinging(Transform swingTarget)
-    {
-        _movementHandler.Disable();
-        _swingingHandler.StartSwinging(swingTarget);
-        _currentState = PlayerState.Swinging;
-    }
+    private void HandleJump() => _currentState.HandleJump();
 
     private void ResetRotation()
     {

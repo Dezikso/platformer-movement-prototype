@@ -3,6 +3,8 @@ using UnityEngine;
 [RequireComponent (typeof(Rigidbody))]
 public class PlayerMover : MonoBehaviour, IPlayerMovementHandler
 {
+    public bool IsActive => _isActive;
+
     [Header("Variables")]
     [SerializeField] private float _speed = 5;
     [SerializeField] private float _jumpForce = 5;
@@ -11,8 +13,8 @@ public class PlayerMover : MonoBehaviour, IPlayerMovementHandler
     private Rigidbody _rb;
     private Transform _cameraTransform;
 
-    private Vector2 _moveInput;
     private bool _isActive = true;
+    private Vector2 _moveInput;
 
     private void Awake()
     {
