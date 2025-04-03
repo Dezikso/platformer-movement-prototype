@@ -5,12 +5,14 @@ public class PlayerController : MonoBehaviour
 {
     public IPlayerMovementHandler MovementHandler => _movementHandler;
     public IPlayerSwingingHandler SwingingHandler => _swingingHandler;
+    public IPlayerClimbingHandler ClimbingHandler => _climbingHandler;
 
     [Header("References")]
     [SerializeField] private InputReader _input;
 
     private IPlayerMovementHandler _movementHandler;
     private IPlayerSwingingHandler _swingingHandler;
+    private IPlayerClimbingHandler _climbingHandler;
 
     private AbstractPlayerState _currentState;
 
@@ -21,6 +23,9 @@ public class PlayerController : MonoBehaviour
 
         _swingingHandler = GetComponent<IPlayerSwingingHandler>();
         Assert.IsNotNull(_swingingHandler);
+
+        _climbingHandler = GetComponent<IPlayerClimbingHandler>();
+        Assert.IsNotNull(_climbingHandler);
 
         _currentState = new WalkingState(this);
     }
@@ -44,11 +49,17 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        // If the player has launched he's waiting for a collision to resume movement
         if (_currentState is LaunchedState)
         {
-            ChangeState(new WalkingState(this));
+            if (collision.gameObject.CompareTag("ClimbingSurface"))
+                ChangeState(new ClimbingState(this, collision.transform));
+
             ResetRotation();
+        }
+        if (_currentState is WalkingState)
+        {
+            if (collision.gameObject.CompareTag("ClimbingSurface"))
+                ChangeState(new ClimbingState(this, collision.transform));
         }
     }
 
@@ -68,5 +79,4 @@ public class PlayerController : MonoBehaviour
         Vector3 currentEuler = transform.eulerAngles;
         transform.eulerAngles = new Vector3(0, currentEuler.y, 0);
     }
-
 }
