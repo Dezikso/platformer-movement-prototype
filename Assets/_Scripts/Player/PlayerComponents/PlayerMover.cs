@@ -13,7 +13,7 @@ public class PlayerMover : MonoBehaviour, IPlayerMovementHandler
     private Rigidbody _rb;
     private Transform _cameraTransform;
 
-    private bool _isActive = true;
+    private bool _isActive = false;
     private Vector2 _moveInput;
 
     private void Awake()

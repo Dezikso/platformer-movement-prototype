@@ -27,7 +27,7 @@ public class PlayerController : MonoBehaviour
         _climbingHandler = GetComponent<IPlayerClimbingHandler>();
         Assert.IsNotNull(_climbingHandler);
 
-        _currentState = new WalkingState(this);
+        ChangeState(new WalkingState(this));
     }
 
     private void OnEnable()
@@ -49,23 +49,27 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (_currentState is LaunchedState)
-        {
-            if (collision.gameObject.CompareTag("ClimbingSurface"))
-                ChangeState(new ClimbingState(this, collision.transform));
-
-            ResetRotation();
-        }
         if (_currentState is WalkingState)
         {
             if (collision.gameObject.CompareTag("ClimbingSurface"))
-                ChangeState(new ClimbingState(this, collision.transform));
+                ChangeState(new ClimbingState(this));
+        }
+        else if (_currentState is LaunchedState)
+        {
+            if (collision.gameObject.CompareTag("ClimbingSurface"))
+                ChangeState(new ClimbingState(this));
+            else
+                ChangeState(new WalkingState(this));
+
+            ResetRotation();
         }
     }
 
     public void ChangeState(AbstractPlayerState newState)
     {
-        _currentState.Exit();
+        if (_currentState != null)
+            _currentState.Exit();
+
         _currentState = newState;
         _currentState.Enter();
     }

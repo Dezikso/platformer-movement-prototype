@@ -7,12 +7,14 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
     [Header("Variables")]
     [SerializeField] private float _speed = 5;
     [SerializeField] private float _jumpForce = 5;
+    [SerializeField] private float _alignmentSpeed = 10f;
+    [SerializeField] private float _surfaceCheckDistance = 1f;
+    [SerializeField] private float _surfaceOffset = 0.55f;
 
     private Rigidbody _rb;
 
-    private bool _isActive = true;
+    private bool _isActive = false;
     private Vector2 _moveInput;
-    private Transform _climbingTarget;
 
     private void Awake()
     {
@@ -21,8 +23,11 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
 
     private void FixedUpdate()
     {
-        if (_isActive && _climbingTarget != null)
+        if (_isActive)
+        {
             ApplyMovement();
+            AlignWithSurface();
+        }
     }
 
     public void Enable()
@@ -35,17 +40,15 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
     {
         _rb.useGravity = true;
         _isActive = false;
-        _climbingTarget = null;
         _moveInput = Vector2.zero;
     }
-
-    public void SetClimbingTarget(Transform target) => _climbingTarget = target;
 
     public void Move(Vector2 direction) => _moveInput = direction;
 
     public void Jump()
     {
-        Debug.Log("Jump");
+        if (_isActive)
+            _rb.AddForce(-transform.forward * _jumpForce, ForceMode.VelocityChange);
     }
 
     private void ApplyMovement()
@@ -53,19 +56,22 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
         Vector3 horizontalMove = Vector3.zero;
         if (_moveInput != Vector2.zero)
         {
-            Vector3 up = _climbingTarget.up;
-            up.z = 0;
-            up.Normalize();
-
-            Vector3 right = _climbingTarget.right;
-            right.z = 0;
-            right.Normalize();
-
-            horizontalMove = (right * _moveInput.x + up * _moveInput.y) * _speed;
+            horizontalMove = (transform.right * _moveInput.x + transform.up * _moveInput.y) * _speed;
         }
-
         Vector3 newVelocity = horizontalMove;
-        newVelocity.z = 0;
         _rb.linearVelocity = newVelocity;
+    }
+
+    private void AlignWithSurface()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, transform.forward, out hit, _surfaceCheckDistance))
+        {
+            Vector3 desiredForward = -hit.normal;
+            transform.forward = Vector3.Lerp(transform.forward, desiredForward, Time.fixedDeltaTime * _alignmentSpeed);
+
+            Vector3 desiredPosition = hit.point + hit.normal * _surfaceOffset;
+            _rb.position = Vector3.Lerp(_rb.position, desiredPosition, Time.fixedDeltaTime * _alignmentSpeed);
+        }
     }
 }
