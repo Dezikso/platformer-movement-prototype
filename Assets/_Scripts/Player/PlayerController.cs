@@ -63,6 +63,11 @@ public class PlayerController : MonoBehaviour
 
             ResetRotation();
         }
+        else if (_currentState is ClimbingState)
+        {
+            if (collision.gameObject.CompareTag("Ground"))
+                ChangeState(new WalkingState(this));
+        }
     }
 
     public void ChangeState(AbstractPlayerState newState)
