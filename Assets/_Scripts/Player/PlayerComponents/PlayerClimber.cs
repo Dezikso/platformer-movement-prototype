@@ -9,7 +9,8 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
     [SerializeField] private float _jumpForce = 5;
     [SerializeField] private float _alignmentSpeed = 10f;
     [SerializeField] private float _surfaceCheckDistance = 1f;
-    [SerializeField] private float _surfaceOffset = 0.55f;
+    [SerializeField] private float _surfaceDistance = 0.55f;
+    [SerializeField] private float _movementCheckOffset = 0.2f;
 
     private Rigidbody _rb;
 
@@ -23,11 +24,15 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
 
     private void FixedUpdate()
     {
-        if (_isActive)
-        {
+        if (!_isActive)
+            return;
+
+        if (IsDirectionClimbable())
             ApplyMovement();
-            AlignWithSurface();
-        }
+        else
+            _moveInput = Vector2.zero;
+
+        AlignWithSurface();
     }
 
     public void Enable()
@@ -55,11 +60,9 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
     {
         Vector3 horizontalMove = Vector3.zero;
         if (_moveInput != Vector2.zero)
-        {
             horizontalMove = (transform.right * _moveInput.x + transform.up * _moveInput.y) * _speed;
-        }
-        Vector3 newVelocity = horizontalMove;
-        _rb.linearVelocity = newVelocity;
+
+        _rb.linearVelocity = horizontalMove;
     }
 
     private void AlignWithSurface()
@@ -70,8 +73,19 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
             Vector3 desiredForward = -hit.normal;
             transform.forward = Vector3.Lerp(transform.forward, desiredForward, Time.fixedDeltaTime * _alignmentSpeed);
 
-            Vector3 desiredPosition = hit.point + hit.normal * _surfaceOffset;
+            Vector3 desiredPosition = hit.point + hit.normal * _surfaceDistance;
             _rb.position = Vector3.Lerp(_rb.position, desiredPosition, Time.fixedDeltaTime * _alignmentSpeed);
         }
+    }
+
+    private bool IsDirectionClimbable()
+    {
+        if (_moveInput == Vector2.zero)
+            return true;
+
+        Vector3 offset = (transform.right * _moveInput.x + transform.up * _moveInput.y) * _movementCheckOffset;
+        Vector3 rayOrigin = transform.position + offset;
+
+        return Physics.Raycast(rayOrigin, transform.forward, _surfaceCheckDistance);
     }
 }
