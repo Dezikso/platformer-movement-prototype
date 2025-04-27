@@ -3,6 +3,7 @@ using UnityEngine;
 [RequireComponent (typeof(Rigidbody))]
 public class PlayerMover : MonoBehaviour, IPlayerMovementHandler
 {
+    private static readonly int IsMovingHash = Animator.StringToHash("IsMoving");
     public bool IsActive => _isActive;
 
     [Header("Variables")]
@@ -12,6 +13,7 @@ public class PlayerMover : MonoBehaviour, IPlayerMovementHandler
 
     private Rigidbody _rb;
     private Transform _cameraTransform;
+    private Animator _animator;
 
     private bool _isActive = false;
     private Vector2 _moveInput;
@@ -20,12 +22,16 @@ public class PlayerMover : MonoBehaviour, IPlayerMovementHandler
     {
         _cameraTransform = Camera.main.transform;
         _rb = GetComponent<Rigidbody>();
+        _animator = GetComponentInChildren<Animator>();
     }
 
     private void FixedUpdate()
     {
-        if (_isActive)
-            ApplyMovement();
+        if (!_isActive)
+            return;
+
+        ApplyMovement();
+        ApplyAnimation();
     }
 
     public void Move(Vector2 direction) => _moveInput = direction;
@@ -36,6 +42,7 @@ public class PlayerMover : MonoBehaviour, IPlayerMovementHandler
     {
         _isActive = false;
         _moveInput = Vector2.zero;
+        _animator.SetBool(IsMovingHash, false);
     }
 
     public void Jump()
@@ -71,5 +78,12 @@ public class PlayerMover : MonoBehaviour, IPlayerMovementHandler
         Vector3 newVelocity = horizontalMove;
         newVelocity.y = _rb.linearVelocity.y;
         _rb.linearVelocity = newVelocity;
+    }
+    private void ApplyAnimation()
+    {
+        if (_moveInput.sqrMagnitude > 0.01f)
+            _animator.SetBool(IsMovingHash, true);
+        else
+            _animator.SetBool(IsMovingHash, false);
     }
 }
