@@ -19,10 +19,10 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
 
     private static readonly int VelocityXHash = Animator.StringToHash("VelocityX");
     private static readonly int VelocityZHash = Animator.StringToHash("VelocityZ");
+    private int _climbingLayerIndex;
 
     private Rigidbody _rb;
     private Animator _animator;
-    private int _climbingLayerIndex;
 
     private bool _isActive = false;
     private Vector2 _moveInput;

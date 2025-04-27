@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -5,15 +6,22 @@ public class PlayerSwinger : MonoBehaviour, IPlayerSwingingHandler
 {
     public bool IsActive => _isActive;
 
-    private Rigidbody _rb;
-    private Transform _swingTarget;
-    private bool _isSwinging = false;
-    private float _swingStartTime;
-
+    [Header("Variables")]
     [SerializeField] private float _maxAngle = 45f;
     [SerializeField] private float _swingPeriod = 2f;
     [SerializeField] private float _ropeLength = 2f;
     [SerializeField] private float _launchForce = 10f;
+
+    [Header("Animation")]
+    [SerializeField] private float _layerFadeDuration = 0.2f;
+
+    private int _swingingLayerIndex;
+
+    private Rigidbody _rb;
+    private Animator _animator;
+    private Transform _swingTarget;
+    private bool _isSwinging = false;
+    private float _swingStartTime;
 
     private bool _isActive = false;
     private Vector3 _swingPlaneDirection;
@@ -22,6 +30,8 @@ public class PlayerSwinger : MonoBehaviour, IPlayerSwingingHandler
     private void Awake()
     {
         _rb = GetComponent<Rigidbody>();
+        _animator = GetComponentInChildren<Animator>();
+        _swingingLayerIndex = _animator.GetLayerIndex("SwingingLayer");
     }
 
     private void FixedUpdate()
@@ -50,6 +60,8 @@ public class PlayerSwinger : MonoBehaviour, IPlayerSwingingHandler
     {
         if (!_isActive)
             return;
+
+        StartCoroutine(FadeAnimationLayer(_swingingLayerIndex, 1));
 
         _swingTarget = swingTarget;
         _isSwinging = true;
@@ -82,6 +94,8 @@ public class PlayerSwinger : MonoBehaviour, IPlayerSwingingHandler
     {
         _isSwinging = false;
         _rb.isKinematic = false;
+
+        StartCoroutine(FadeAnimationLayer(_swingingLayerIndex, 0));
     }
 
     private void UpdatePosition(float theta)
@@ -97,5 +111,19 @@ public class PlayerSwinger : MonoBehaviour, IPlayerSwingingHandler
                              + _ropeLength * Mathf.Sin(theta) * Vector3.up;
         _currentTangent = derivative.normalized;
         transform.rotation = Quaternion.LookRotation(_currentTangent, Vector3.up);
+    }
+
+    private IEnumerator FadeAnimationLayer(int layerIndex, float targetWeight)
+    {
+        float startWeight = _animator.GetLayerWeight(layerIndex);
+
+        for (float t = 0f; t < 1f; t += Time.deltaTime / _layerFadeDuration)
+        {
+            float weight = Mathf.Lerp(startWeight, targetWeight, t);
+            _animator.SetLayerWeight(layerIndex, weight);
+            yield return null;
+        }
+
+        _animator.SetLayerWeight(layerIndex, targetWeight);
     }
 }

@@ -132,6 +132,7 @@ MonoBehaviour:
   _swingPeriod: 2
   _ropeLength: 2
   _launchForce: 10
+  _layerFadeDuration: 0.35
 --- !u!114 &1899581079808860488
 MonoBehaviour:
   m_ObjectHideFlags: 0
