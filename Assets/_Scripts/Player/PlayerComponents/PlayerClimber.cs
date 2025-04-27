@@ -1,7 +1,11 @@
+using System.Collections;
 using UnityEngine;
 
 public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
 {
+    private static readonly int VelocityXHash = Animator.StringToHash("VelocityX");
+    private static readonly int VelocityZHash = Animator.StringToHash("VelocityZ");
+
     public bool IsActive => _isActive;
 
     [Header("Variables")]
@@ -12,14 +16,23 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
     [SerializeField] private float _surfaceDistance = 0.55f;
     [SerializeField] private float _movementCheckOffset = 0.2f;
 
+    [Header("Animation")]
+    [SerializeField] private float _animationAcceleration = 1f;
+    [SerializeField] private float _layerFadeDuration = 0.2f;
+
     private Rigidbody _rb;
+    private Animator _animator;
+    private int _climbingLayerIndex;
 
     private bool _isActive = false;
     private Vector2 _moveInput;
+    private Vector2 _animationVelocity;
 
     private void Awake()
     {
         _rb = GetComponent<Rigidbody>();
+        _animator = GetComponentInChildren<Animator>();
+        _climbingLayerIndex = _animator.GetLayerIndex("ClimbingLayer");
     }
 
     private void FixedUpdate()
@@ -28,7 +41,10 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
             return;
 
         if (IsDirectionClimbable())
+        {
             ApplyMovement();
+            ApplyAnimation();
+        }
         else
             _moveInput = Vector2.zero;
 
@@ -39,6 +55,7 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
     {
         _rb.useGravity = false;
         _isActive = true;
+        StartCoroutine(FadeAnimationLayer(_climbingLayerIndex, 1f));
     }
 
     public void Disable()
@@ -46,6 +63,8 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
         _rb.useGravity = true;
         _isActive = false;
         _moveInput = Vector2.zero;
+        _animationVelocity = Vector2.zero;
+        StartCoroutine(FadeAnimationLayer(_climbingLayerIndex, 0f));
     }
 
     public void Move(Vector2 direction) => _moveInput = direction;
@@ -87,5 +106,27 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
         Vector3 rayOrigin = transform.position + offset;
 
         return Physics.Raycast(rayOrigin, transform.forward, _surfaceCheckDistance);
+    }
+
+    private void ApplyAnimation()
+    {
+        _animationVelocity = Vector2.MoveTowards(_animationVelocity, _moveInput, _animationAcceleration * Time.fixedDeltaTime);
+
+        _animator.SetFloat(VelocityXHash, _animationVelocity.x);
+        _animator.SetFloat(VelocityZHash, _animationVelocity.y);
+    }
+
+    private IEnumerator FadeAnimationLayer(int layerIndex, float targetWeight)
+    {
+        float startWeight = _animator.GetLayerWeight(layerIndex);
+
+        for (float t = 0f; t < 1f; t += Time.deltaTime / _layerFadeDuration)
+        {
+            float weight = Mathf.Lerp(startWeight, targetWeight, t);
+            _animator.SetLayerWeight(layerIndex, weight);
+            yield return null;
+        }
+
+        _animator.SetLayerWeight(layerIndex, targetWeight);
     }
 }

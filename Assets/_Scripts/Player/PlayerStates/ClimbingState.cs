@@ -10,6 +10,9 @@ public class ClimbingState : AbstractPlayerState
     public override void HandleMove(Vector2 direction) => _playerController.ClimbingHandler.Move(direction);
     public override void HandleJump()
     {
+        if (_playerController.IsGrounded)
+            return;
+
         _playerController.ClimbingHandler.Jump();
         _playerController.ChangeState(new LaunchedState(_playerController));
     }

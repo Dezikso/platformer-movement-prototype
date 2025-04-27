@@ -7,6 +7,8 @@ public class PlayerController : MonoBehaviour
     public IPlayerSwingingHandler SwingingHandler => _swingingHandler;
     public IPlayerClimbingHandler ClimbingHandler => _climbingHandler;
 
+    public bool IsGrounded => Physics.Raycast(transform.position, Vector3.down, 1.1f);
+
     [Header("References")]
     [SerializeField] private InputReader _input;
 
