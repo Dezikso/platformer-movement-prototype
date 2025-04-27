@@ -3,13 +3,15 @@ using UnityEngine;
 [RequireComponent (typeof(Rigidbody))]
 public class PlayerMover : MonoBehaviour, IPlayerMovementHandler
 {
-    private static readonly int IsMovingHash = Animator.StringToHash("IsMoving");
     public bool IsActive => _isActive;
 
     [Header("Variables")]
     [SerializeField] private float _speed = 5;
     [SerializeField] private float _jumpForce = 5;
     [SerializeField] private float _rotationSpeed = 10f;
+
+    private static readonly int IsMovingHash = Animator.StringToHash("IsMoving");
+    private static readonly int JumpTriggerHash = Animator.StringToHash("JumpTrigger");
 
     private Rigidbody _rb;
     private Transform _cameraTransform;
@@ -47,8 +49,11 @@ public class PlayerMover : MonoBehaviour, IPlayerMovementHandler
 
     public void Jump()
     {
-        if (IsGrounded())
-            _rb.AddForce(Vector3.up * _jumpForce, ForceMode.VelocityChange);
+        if (!IsGrounded())
+            return;
+
+        _rb.AddForce(Vector3.up * _jumpForce, ForceMode.VelocityChange);
+        _animator.SetTrigger(JumpTriggerHash);
     }
 
     private bool IsGrounded()
@@ -81,9 +86,7 @@ public class PlayerMover : MonoBehaviour, IPlayerMovementHandler
     }
     private void ApplyAnimation()
     {
-        if (_moveInput.sqrMagnitude > 0.01f)
-            _animator.SetBool(IsMovingHash, true);
-        else
-            _animator.SetBool(IsMovingHash, false);
+        bool moving = _moveInput.sqrMagnitude > 0.01f;
+        _animator.SetBool(IsMovingHash, moving);
     }
 }

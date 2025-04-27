@@ -12,14 +12,21 @@ public class PlayerController : MonoBehaviour
     [Header("References")]
     [SerializeField] private InputReader _input;
 
+    private static readonly int IsGroundedHash = Animator.StringToHash("IsGrounded");
+
     private IPlayerMovementHandler _movementHandler;
     private IPlayerSwingingHandler _swingingHandler;
     private IPlayerClimbingHandler _climbingHandler;
 
+    private Animator _animator;
+
     private AbstractPlayerState _currentState;
+    private bool _lastIsGrounded;
 
     private void Awake()
     {
+        _animator = GetComponentInChildren<Animator>();
+
         _movementHandler = GetComponent<IPlayerMovementHandler>();
         Assert.IsNotNull(_movementHandler);
 
@@ -41,6 +48,16 @@ public class PlayerController : MonoBehaviour
     {
         _input.MoveEvent -= HandleMove;
         _input.JumpEvent -= HandleJump;
+    }
+
+    private void Update()
+    {
+        bool isGrounded = IsGrounded;
+        if (isGrounded != _lastIsGrounded)
+        {
+            _animator.SetBool(IsGroundedHash, isGrounded);
+            _lastIsGrounded = isGrounded;
+        }
     }
 
     private void OnTriggerEnter(Collider other)

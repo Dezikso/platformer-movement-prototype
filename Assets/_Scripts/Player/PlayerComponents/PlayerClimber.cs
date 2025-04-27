@@ -3,9 +3,6 @@ using UnityEngine;
 
 public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
 {
-    private static readonly int VelocityXHash = Animator.StringToHash("VelocityX");
-    private static readonly int VelocityZHash = Animator.StringToHash("VelocityZ");
-
     public bool IsActive => _isActive;
 
     [Header("Variables")]
@@ -19,6 +16,9 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
     [Header("Animation")]
     [SerializeField] private float _animationAcceleration = 1f;
     [SerializeField] private float _layerFadeDuration = 0.2f;
+
+    private static readonly int VelocityXHash = Animator.StringToHash("VelocityX");
+    private static readonly int VelocityZHash = Animator.StringToHash("VelocityZ");
 
     private Rigidbody _rb;
     private Animator _animator;
