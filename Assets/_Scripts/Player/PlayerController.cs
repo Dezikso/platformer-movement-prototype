@@ -84,7 +84,7 @@ public class PlayerController : MonoBehaviour
         }
         else if (_currentState is ClimbingState)
         {
-            if (collision.gameObject.CompareTag("Ground"))
+            if (collision.gameObject.CompareTag("Ground") && IsGrounded)
                 ChangeState(new WalkingState(this));
         }
     }

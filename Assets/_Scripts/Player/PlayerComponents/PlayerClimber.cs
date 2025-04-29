@@ -6,6 +6,7 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
     public bool IsActive => _isActive;
 
     [Header("Variables")]
+    [SerializeField] private LayerMask _climbingLayer;
     [SerializeField] private float _speed = 5;
     [SerializeField] private float _jumpForce = 5;
     [SerializeField] private float _alignmentSpeed = 10f;
@@ -102,10 +103,12 @@ public class PlayerClimber : MonoBehaviour, IPlayerClimbingHandler
         if (_moveInput == Vector2.zero)
             return true;
 
-        Vector3 offset = (transform.right * _moveInput.x + transform.up * _moveInput.y) * _movementCheckOffset;
-        Vector3 rayOrigin = transform.position + offset;
+        Vector3 offset = (transform.right * Mathf.Round(_moveInput.x) + transform.up * Mathf.Round(_moveInput.y)) * _movementCheckOffset;
+        Vector3 rayOrigin = transform.position + offset - transform.forward;
 
-        return Physics.Raycast(rayOrigin, transform.forward, _surfaceCheckDistance);
+        Debug.DrawRay(rayOrigin, transform.forward * _surfaceCheckDistance, Color.red);
+
+        return Physics.Raycast(rayOrigin, transform.forward, _surfaceCheckDistance, _climbingLayer);
     }
 
     private void ApplyAnimation()

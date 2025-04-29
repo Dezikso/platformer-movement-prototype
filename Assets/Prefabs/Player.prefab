@@ -145,10 +145,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85d153e8936324b449b02f1ef332f0d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _climbingLayer:
+    serializedVersion: 2
+    m_Bits: 64
   _speed: 2
   _jumpForce: 5
   _alignmentSpeed: 10
-  _surfaceCheckDistance: 1
+  _surfaceCheckDistance: 2
   _surfaceDistance: 0.4
   _movementCheckOffset: 1
   _animationAcceleration: 8
